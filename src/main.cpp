@@ -24,23 +24,6 @@ static uint8_t font_set[]{
     0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 };
 
-struct Memory {
-    uint8_t mem[4096]{};
-
-    void init() {
-        // Initialize font set at 0x50-0x9F
-        std::copy(std::begin(font_set), std::end(font_set), mem+0x50);
-    }
-};
-
-struct Display {
-    bool display[64*32]{};
-};
-
-struct Keypad {
-    bool keys[16]{};
-};
-
 struct Context {
     std::array<uint8_t, 16> V{};
     uint16_t I{};
@@ -51,21 +34,31 @@ struct Context {
     uint16_t stack[16]{};
 };
 
+struct CHIP8 {
+    uint8_t memory[4096]{};
+    bool display[64*32]{};
+    bool keys[16]{};
+    Context ctx{};
+
+    CHIP8() {
+        std::copy(std::begin(font_set), std::end(font_set), memory+0x50);
+    }
+};
+
 int main(int argc, char** argv) {
     if (argc < 2) {
         std::cerr << "Usage: chipate <rom>\n";
         return 1;
     }
 
-    Memory memory{};
-    memory.init();
+    CHIP8 chip8{};
 
     std::ifstream rom{argv[1], std::ios::binary};
     if (!rom) {
         std::cerr << "Failed to open ROM: " << argv[1] << "\n";
         return 1;
     }
-    rom.read(reinterpret_cast<char*>(memory.mem + 0x200), 4096-0x200);
+    rom.read(reinterpret_cast<char*>(chip8.memory + 0x200), 4096-0x200);
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         std::cerr << "SDL_Init failed: " << SDL_GetError() << "\n";
