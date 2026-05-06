@@ -1,0 +1,53 @@
+# === Build artifacts ===
+cmake-build-*/
+build/
+out/
+_deps/
+
+# === CLion / JetBrains ===
+.idea/
+*.iml
+
+# === CMake generated files ===
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# === Compiled object/binary files ===
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+*.app
+
+# === Debug files ===
+*.pdb
+*.ilk
+*.exp
+
+# === Editor / OS noise ===
+*.swp
+*.swo
+*~
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === Logs and temp ===
+*.log
+*.tmp
+
+# === Vendored SDL3 — keep source, exclude its build artifacts and git ===
+vendored/SDL/.git/
+vendored/SDL/build/
+vendored/SDL/cmake-build-*/
