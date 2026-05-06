@@ -67,6 +67,7 @@ int main(int, char**) {
     if (!renderer) {
         std::cerr << "SDL_CreateRenderer failed: " << SDL_GetError() << "\n";
         SDL_Quit();
+        return 1;
     }
 
     bool running = true;
