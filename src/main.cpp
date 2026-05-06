@@ -2,6 +2,7 @@
 #include <cstring>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_keycode.h>
+#include <fstream>
 #include <iostream>
 
 static uint8_t font_set[]{
@@ -50,7 +51,22 @@ struct Context {
     uint16_t stack[16]{};
 };
 
-int main(int, char**) {
+int main(int argc, char** argv) {
+    if (argc < 2) {
+        std::cerr << "Usage: chipate <rom>\n";
+        return 1;
+    }
+
+    Memory memory{};
+    memory.init();
+
+    std::ifstream rom{argv[1], std::ios::binary};
+    if (!rom) {
+        std::cerr << "Failed to open ROM: " << argv[1] << "\n";
+        return 1;
+    }
+    rom.read(reinterpret_cast<char*>(memory.mem + 0x200), 4096-0x200);
+
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         std::cerr << "SDL_Init failed: " << SDL_GetError() << "\n";
         return 1;
