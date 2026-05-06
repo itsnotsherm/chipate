@@ -79,6 +79,13 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL);
+    if (!renderer) {
+        std::cerr << "SDL_CreateRenderer failed: " << SDL_GetError() << "\n";
+        SDL_Quit();
+        return 1;
+    }
+
     bool running = true;
     SDL_Event event;
     while (running) {
@@ -90,6 +97,7 @@ int main(int argc, char** argv) {
         SDL_Delay(16);
     }
 
+    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
