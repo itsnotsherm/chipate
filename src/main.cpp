@@ -145,6 +145,10 @@ public:
                 loadI(addr);
                 break;
             }
+            case 0xB000: {
+                jumpOffset(addr);
+                break;
+            }
             case 0xD000: {
                 draw(x, y, n);
                 break;
@@ -242,6 +246,10 @@ private:
 
     void loadI(const uint16_t address) {
         I = address;
+    }
+
+    void jumpOffset(const uint16_t address) {
+        PC = address + V[0];
     }
 
     void draw(const uint8_t x, const uint8_t y, const uint8_t n) {
