@@ -158,6 +158,17 @@ public:
                 draw(x, y, n);
                 break;
             }
+            case 0xE000: {
+                switch (opcode & 0x00FF) {
+                    case 0x9E:
+                        skipNextKeyPressed(x);
+                        break;
+                    case 0xA1:
+                        skipNextKeyNotPressed(x);
+                        break;
+                }
+                break;
+            }
         }
     }
 
@@ -281,6 +292,14 @@ private:
                 }
             }
         }
+    }
+
+    void skipNextKeyPressed(const uint8_t x) {
+        if (keys[V[x]]) PC += 2;
+    }
+
+    void skipNextKeyNotPressed(const uint8_t x) {
+        if (!keys[V[x]]) PC += 2;
     }
 };
 
