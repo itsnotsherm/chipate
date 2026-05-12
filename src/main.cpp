@@ -53,6 +53,10 @@ public:
         return true;
     }
 
+    [[nodiscard]] const bool* getDisplay() const {
+        return display;
+    }
+
     void step() {
         const uint16_t opcode = (memory[ctx.PC] << 8) | memory[ctx.PC + 1];
         ctx.PC += 2;
@@ -171,6 +175,23 @@ int main(int argc, char** argv) {
     bool running = true;
     SDL_Event event;
     while (running) {
+        chip8.step();
+        auto display = chip8.getDisplay();
+
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+
+        for (size_t i = 0; i < 64*32; ++i) {
+            if (display[i]) {
+                const auto x = static_cast<float>(i % 64 * 16);
+                const auto y = static_cast<float>(i / 64 * 16);
+
+                SDL_FRect rect{x, y, 16.0f, 16.0f};
+                SDL_RenderFillRect(renderer, &rect);
+            }
+        }
+        SDL_RenderPresent(renderer);
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) running = false;
             if (event.type == SDL_EVENT_KEY_DOWN &&
