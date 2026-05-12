@@ -24,7 +24,9 @@ static uint8_t font_set[]{
     0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 };
 
-struct Context {
+class CHIP8 {
+private:
+    // Context (Registers + Stack)
     std::array<uint8_t, 16> V{};
     uint16_t I{};
     uint16_t PC{0x200};
@@ -33,18 +35,10 @@ struct Context {
     uint8_t ST{};
     uint16_t stack[16]{};
 
-    void subReturn() {
-        PC = stack[SP];
-        SP--;
-    }
-};
-
-class CHIP8 {
-private:
+    // Machine
     uint8_t memory[4096]{};
     bool display[64*32]{};
     bool keys[16]{};
-    Context ctx{};
 
 public:
     CHIP8() {
@@ -63,8 +57,8 @@ public:
     }
 
     void step() {
-        const uint16_t opcode = (memory[ctx.PC] << 8) | memory[ctx.PC + 1];
-        ctx.PC += 2;
+        const uint16_t opcode = (memory[PC] << 8) | memory[PC + 1];
+        PC += 2;
 
         switch (opcode & 0xF000) {
             case 0x0000: {
@@ -118,41 +112,41 @@ private:
     }
 
     void subReturn() {
-        ctx.subReturn();
+        PC = stack[SP--];
     }
 
     void jump(const uint16_t address) {
-        ctx.PC = address;
+        PC = address;
     }
 
     void call(const uint16_t address) {
-        ctx.stack[++ctx.SP] = ctx.PC;
-        ctx.PC = address;
+        stack[++SP] = PC;
+        PC = address;
     }
 
     void loadVx(const size_t reg, const uint8_t kk) {
-        ctx.V[reg] = kk;
+        V[reg] = kk;
     }
 
     void addVx(const size_t reg, const uint8_t kk) {
-        ctx.V[reg] += kk;
+        V[reg] += kk;
     }
 
     void loadI(const uint16_t address) {
-        ctx.I = address;
+        I = address;
     }
 
     void draw(const size_t x, const size_t y, const uint8_t n) {
-        ctx.V[0xF] = 0;
+        V[0xF] = 0;
         for (size_t i = 0; i < n; i++) {
-            const uint8_t byte = memory[ctx.I + i];
-            const auto py = ctx.V[y];
+            const uint8_t byte = memory[I + i];
+            const auto py = V[y];
             for (size_t j = 0; j < 8; j++) {
                 if (byte & (0x80 >> j)) {
-                    const auto px = (ctx.V[x] + j) % 64;
+                    const auto px = (V[x] + j) % 64;
                     const auto pixel = ((py + i) % 32) * 64 + px;
                     if (display[pixel]) {
-                        ctx.V[0xF] = 1;
+                        V[0xF] = 1;
                     }
                     display[pixel] ^= 1;
                 }
