@@ -51,3 +51,6 @@ desktop.ini
 vendored/SDL/.git/
 vendored/SDL/build/
 vendored/SDL/cmake-build-*/
+
+# === ROM folders and files === #
+roms/
