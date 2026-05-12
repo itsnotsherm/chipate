@@ -106,7 +106,35 @@ public:
                 break;
             }
             case 0x8000: {
-                loadRegVx(x, y);
+                switch (n) {
+                    case 0x0:
+                        loadRegVx(x, y);
+                        break;
+                    case 0x1:
+                        regOR(x, y);
+                        break;
+                    case 0x2:
+                        regAND(x, y);
+                        break;
+                    case 0x3:
+                        regXOR(x, y);
+                        break;
+                    case 0x4:
+                        addRegVx(x, y);
+                        break;
+                    case 0x5:
+                        subRegVx(x, y);
+                        break;
+                    case 0x6:
+                        shiftRightVx(x);
+                        break;
+                    case 0x7:
+                        subNRegVx(x, y);
+                        break;
+                    case 0xE:
+                        shiftLeftVx(x);
+                        break;
+                }
                 break;
             }
             case 0xA000: {
@@ -160,6 +188,48 @@ private:
 
     void loadRegVx(const uint8_t x, const uint8_t y) {
         V[x] = V[y];
+    }
+
+    void regOR(const uint8_t x, const uint8_t y) {
+        V[x] |= V[y];
+    }
+
+    void regAND(const uint8_t x, const uint8_t y) {
+        V[x] &= V[y];
+    }
+
+    void regXOR(const uint8_t x, const uint8_t y) {
+        V[x] ^= V[y];
+    }
+
+    void addRegVx(const uint8_t x, const uint8_t y) {
+        const uint8_t carry = (V[x] > 0xFF - V[y]) ? 1 : 0;
+        V[x] += V[y];
+        V[0xF] = carry;
+    }
+
+    void subRegVx(const uint8_t x, const uint8_t y) {
+        const uint8_t borrow = (V[x] >= V[y]) ? 0 : 1;
+        V[x] -= V[y];
+        V[0xF] = !borrow;
+    }
+
+    void shiftRightVx(const uint8_t x) {
+        const uint8_t lsb = V[x] & 0x1;
+        V[x] >>= 1;
+        V[0xF] = lsb;
+    }
+
+    void subNRegVx(const uint8_t x, const uint8_t y) {
+        const uint8_t borrow = (V[y] >= V[x]) ? 0 : 1;
+        V[x] = V[y] - V[x];
+        V[0xF] = !borrow;
+    }
+
+    void shiftLeftVx(const uint8_t x) {
+        const uint8_t msb = (V[x] >> 7) & 0x1;
+        V[x] <<= 1;
+        V[0xF] = msb;
     }
 
     void loadI(const uint16_t address) {
