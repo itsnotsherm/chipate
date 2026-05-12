@@ -82,6 +82,10 @@ public:
                 jump(opcode & 0x0FFF);
                 break;
             }
+            case 0x2000: {
+                call(opcode & 0x0FFF);
+                break;
+            }
             case 0x6000: {
                 const size_t reg = (opcode & 0x0F00) >> 8;
                 const uint8_t kk = opcode & 0x00FF;
@@ -118,6 +122,11 @@ private:
     }
 
     void jump(const uint16_t address) {
+        ctx.PC = address;
+    }
+
+    void call(const uint16_t address) {
+        ctx.stack[++ctx.SP] = ctx.PC;
         ctx.PC = address;
     }
 
