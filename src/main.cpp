@@ -89,6 +89,10 @@ public:
                 skipNextEquals(x, kk);
                 break;
             }
+            case 0x4000: {
+                skipNextNotEquals(x, kk);
+                break;
+            }
             case 0x6000: {
                 loadVx(x, kk);
                 break;
@@ -126,8 +130,12 @@ private:
         PC = address;
     }
 
-    void skipNextEquals(const uint8_t x, const uint16_t kk) {
+    void skipNextEquals(const uint8_t x, const uint8_t kk) {
         if (V[x] == kk) PC += 2;
+    }
+    
+    void skipNextNotEquals(const uint8_t x, const uint8_t kk) {
+        if (V[x] != kk) PC += 2;
     }
 
     void loadVx(const uint8_t x, const uint8_t kk) {
