@@ -137,6 +137,10 @@ public:
                 }
                 break;
             }
+            case 0x9000: {
+                skipNextRegNotEquals(x, y);
+                break;
+            }
             case 0xA000: {
                 loadI(addr);
                 break;
@@ -230,6 +234,10 @@ private:
         const uint8_t msb = (V[x] >> 7) & 0x1;
         V[x] <<= 1;
         V[0xF] = msb;
+    }
+
+    void skipNextRegNotEquals(const uint8_t x, const uint8_t y) {
+        if (V[x] != V[y]) PC += 2;
     }
 
     void loadI(const uint16_t address) {
