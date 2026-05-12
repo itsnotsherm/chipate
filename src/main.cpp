@@ -46,6 +46,13 @@ public:
         std::copy(std::begin(font_set), std::end(font_set), memory+0x50);
     }
 
+    bool loadROM(const char* path) {
+        std::ifstream rom{path, std::ios::binary};
+        if (!rom) return false;
+        rom.read(reinterpret_cast<char*>(memory + 0x200), 4096 - 0x200);
+        return true;
+    }
+
     void step() {
         const uint16_t opcode = (memory[ctx.PC] << 8) | memory[ctx.PC + 1];
         ctx.PC += 2;
@@ -112,12 +119,10 @@ int main(int argc, char** argv) {
 
     CHIP8 chip8{};
 
-    std::ifstream rom{argv[1], std::ios::binary};
-    if (!rom) {
+    if (!chip8.loadROM(argv[1])) {
         std::cerr << "Failed to open ROM: " << argv[1] << "\n";
         return 1;
     }
-    rom.read(reinterpret_cast<char*>(chip8.memory + 0x200), 4096-0x200);
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         std::cerr << "SDL_Init failed: " << SDL_GetError() << "\n";
