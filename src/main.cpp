@@ -32,6 +32,11 @@ struct Context {
     uint8_t DT{};
     uint8_t ST{};
     uint16_t stack[16]{};
+
+    void subReturn() {
+        PC = stack[SP];
+        SP--;
+    }
 };
 
 class CHIP8 {
@@ -66,6 +71,9 @@ public:
                 switch (opcode & 0x00FF) {
                     case 0x00E0:
                         clearDisplay();
+                        break;
+                    case 0x00EE:
+                        subReturn();
                         break;
                 }
                 break;
@@ -103,6 +111,10 @@ public:
 private:
     void clearDisplay() {
         std::fill(std::begin(display), std::end(display), false);
+    }
+
+    void subReturn() {
+        ctx.subReturn();
     }
 
     void jump(const uint16_t address) {
