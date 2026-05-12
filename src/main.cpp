@@ -34,14 +34,73 @@ struct Context {
     uint16_t stack[16]{};
 };
 
-struct CHIP8 {
+class CHIP8 {
+private:
     uint8_t memory[4096]{};
     bool display[64*32]{};
     bool keys[16]{};
     Context ctx{};
 
+public:
     CHIP8() {
         std::copy(std::begin(font_set), std::end(font_set), memory+0x50);
+    }
+
+    void step() {
+        const uint16_t opcode = (memory[ctx.PC] << 8) | memory[ctx.PC + 1];
+        ctx.PC += 2;
+
+        switch (opcode & 0xF000) {
+            case 0x0000: {
+                switch (opcode & 0x00FF) {
+                    case 0x00E0:
+                        clearDisplay();
+                        break;
+                }
+                break;
+            }
+            case 0x1000: {
+                jump(opcode & 0x0FFF);
+                break;
+            }
+            case 0x6000: {
+                const size_t reg = (opcode & 0x0F00) >> 8;
+                const uint8_t kk = opcode & 0x00FF;
+                loadVx(reg, kk);
+                break;
+            }
+            case 0x7000: {
+                const size_t reg = (opcode & 0x0F00) >> 8;
+                const uint8_t kk = opcode & 0x00FF;
+                addVx(reg, kk);
+                break;
+            }
+            case 0xA000: {
+                loadI(opcode & 0x0FFF);
+                break;
+            }
+        }
+    }
+
+private:
+    void clearDisplay() {
+        std::fill(std::begin(display), std::end(display), false);
+    }
+
+    void jump(const uint16_t address) {
+        ctx.PC = address;
+    }
+
+    void loadVx(const size_t reg, const uint8_t kk) {
+        ctx.V[reg] = kk;
+    }
+
+    void addVx(const size_t reg, const uint8_t kk) {
+        ctx.V[reg] += kk;
+    }
+
+    void loadI(const uint16_t address) {
+        ctx.I = address;
     }
 };
 
