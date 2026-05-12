@@ -80,6 +80,12 @@ public:
                 call(opcode & 0x0FFF);
                 break;
             }
+            case 0x3000: {
+                const size_t x = (opcode & 0x0F00) >> 8;
+                const uint8_t kk = opcode & 0x00FF;
+                skipNextEquals(x, kk);
+                break;
+            }
             case 0x6000: {
                 const size_t reg = (opcode & 0x0F00) >> 8;
                 const uint8_t kk = opcode & 0x00FF;
@@ -122,6 +128,10 @@ private:
     void call(const uint16_t address) {
         stack[++SP] = PC;
         PC = address;
+    }
+
+    void skipNextEquals(const size_t x, const uint16_t kk) {
+        if (V[x] == kk) PC += 2;
     }
 
     void loadVx(const size_t reg, const uint8_t kk) {
