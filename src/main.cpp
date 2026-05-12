@@ -105,6 +105,10 @@ public:
                 addVx(x, kk);
                 break;
             }
+            case 0x8000: {
+                loadRegVx(x, y);
+                break;
+            }
             case 0xA000: {
                 loadI(addr);
                 break;
@@ -152,6 +156,10 @@ private:
 
     void addVx(const uint8_t x, const uint8_t kk) {
         V[x] += kk;
+    }
+
+    void loadRegVx(const uint8_t x, const uint8_t y) {
+        V[x] = V[y];
     }
 
     void loadI(const uint16_t address) {
