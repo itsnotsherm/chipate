@@ -4,6 +4,7 @@
 #include <SDL3/SDL_keycode.h>
 #include <fstream>
 #include <iostream>
+#include <random>
 
 static uint8_t font_set[]{
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -149,6 +150,10 @@ public:
                 jumpOffset(addr);
                 break;
             }
+            case 0xC000: {
+                randVx(x, kk);
+                break;
+            }
             case 0xD000: {
                 draw(x, y, n);
                 break;
@@ -250,6 +255,14 @@ private:
 
     void jumpOffset(const uint16_t addr) {
         PC = addr + V[0];
+    }
+
+    void randVx(const uint8_t x, const uint8_t kk) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dist(0, 255);
+
+        V[x] = dist(gen) & kk;
     }
 
     void draw(const uint8_t x, const uint8_t y, const uint8_t n) {
