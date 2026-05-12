@@ -165,13 +165,13 @@ private:
         PC = stack[SP--];
     }
 
-    void jump(const uint16_t address) {
-        PC = address;
+    void jump(const uint16_t addr) {
+        PC = addr;
     }
 
-    void call(const uint16_t address) {
+    void call(const uint16_t addr) {
         stack[++SP] = PC;
-        PC = address;
+        PC = addr;
     }
 
     void skipNextEquals(const uint8_t x, const uint8_t kk) {
@@ -244,12 +244,12 @@ private:
         if (V[x] != V[y]) PC += 2;
     }
 
-    void loadI(const uint16_t address) {
-        I = address;
+    void loadI(const uint16_t addr) {
+        I = addr;
     }
 
-    void jumpOffset(const uint16_t address) {
-        PC = address + V[0];
+    void jumpOffset(const uint16_t addr) {
+        PC = addr + V[0];
     }
 
     void draw(const uint8_t x, const uint8_t y, const uint8_t n) {
