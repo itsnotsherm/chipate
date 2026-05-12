@@ -60,6 +60,11 @@ public:
         const uint16_t opcode = (memory[PC] << 8) | memory[PC + 1];
         PC += 2;
 
+        const uint16_t addr = opcode & 0x0FFF;
+        const uint8_t n = opcode & 0x000F;
+        const uint8_t x = (opcode & 0x0F00) >> 8;
+        const uint8_t y = (opcode & 0x00F0) >> 4;
+        const uint8_t kk = opcode & 0x00FF;
         switch (opcode & 0xF000) {
             case 0x0000: {
                 switch (opcode & 0x00FF) {
@@ -73,39 +78,30 @@ public:
                 break;
             }
             case 0x1000: {
-                jump(opcode & 0x0FFF);
+                jump(addr);
                 break;
             }
             case 0x2000: {
-                call(opcode & 0x0FFF);
+                call(addr);
                 break;
             }
             case 0x3000: {
-                const size_t x = (opcode & 0x0F00) >> 8;
-                const uint8_t kk = opcode & 0x00FF;
                 skipNextEquals(x, kk);
                 break;
             }
             case 0x6000: {
-                const size_t reg = (opcode & 0x0F00) >> 8;
-                const uint8_t kk = opcode & 0x00FF;
-                loadVx(reg, kk);
+                loadVx(x, kk);
                 break;
             }
             case 0x7000: {
-                const size_t reg = (opcode & 0x0F00) >> 8;
-                const uint8_t kk = opcode & 0x00FF;
-                addVx(reg, kk);
+                addVx(x, kk);
                 break;
             }
             case 0xA000: {
-                loadI(opcode & 0x0FFF);
+                loadI(addr);
                 break;
             }
             case 0xD000: {
-                const size_t x = (opcode & 0x0F00) >> 8;
-                const size_t y = (opcode & 0x00F0) >> 4;
-                const uint8_t n = opcode & 0x000F;
                 draw(x, y, n);
                 break;
             }
@@ -130,23 +126,23 @@ private:
         PC = address;
     }
 
-    void skipNextEquals(const size_t x, const uint16_t kk) {
+    void skipNextEquals(const uint8_t x, const uint16_t kk) {
         if (V[x] == kk) PC += 2;
     }
 
-    void loadVx(const size_t reg, const uint8_t kk) {
-        V[reg] = kk;
+    void loadVx(const uint8_t x, const uint8_t kk) {
+        V[x] = kk;
     }
 
-    void addVx(const size_t reg, const uint8_t kk) {
-        V[reg] += kk;
+    void addVx(const uint8_t x, const uint8_t kk) {
+        V[x] += kk;
     }
 
     void loadI(const uint16_t address) {
         I = address;
     }
 
-    void draw(const size_t x, const size_t y, const uint8_t n) {
+    void draw(const uint8_t x, const uint8_t y, const uint8_t n) {
         V[0xF] = 0;
         for (size_t i = 0; i < n; i++) {
             const uint8_t byte = memory[I + i];
