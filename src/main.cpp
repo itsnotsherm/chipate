@@ -86,6 +86,13 @@ public:
                 loadI(opcode & 0x0FFF);
                 break;
             }
+            case 0xD000: {
+                const size_t x = (opcode & 0x0F00) >> 8;
+                const size_t y = (opcode & 0x00F0) >> 4;
+                const uint8_t n = opcode & 0x000F;
+                draw(x, y, n);
+                break;
+            }
         }
     }
 
@@ -108,6 +115,24 @@ private:
 
     void loadI(const uint16_t address) {
         ctx.I = address;
+    }
+
+    void draw(const size_t x, const size_t y, const uint8_t n) {
+        ctx.V[0xF] = 0;
+        for (size_t i = 0; i < n; i++) {
+            const uint8_t byte = memory[ctx.I + i];
+            const auto py = ctx.V[y];
+            for (size_t j = 0; j < 8; j++) {
+                if (byte & (0x80 >> j)) {
+                    const auto px = (ctx.V[x] + j) % 64;
+                    const auto pixel = ((py + i) % 32) * 64 + px;
+                    if (display[pixel]) {
+                        ctx.V[0xF] = 1;
+                    }
+                    display[pixel] ^= 1;
+                }
+            }
+        }
     }
 };
 
