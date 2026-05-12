@@ -93,6 +93,10 @@ public:
                 skipNextNotEquals(x, kk);
                 break;
             }
+            case 0x5000: {
+                skipNextRegEquals(x, y);
+                break;
+            }
             case 0x6000: {
                 loadVx(x, kk);
                 break;
@@ -133,9 +137,13 @@ private:
     void skipNextEquals(const uint8_t x, const uint8_t kk) {
         if (V[x] == kk) PC += 2;
     }
-    
+
     void skipNextNotEquals(const uint8_t x, const uint8_t kk) {
         if (V[x] != kk) PC += 2;
+    }
+
+    void skipNextRegEquals(const uint8_t x, const uint8_t y) {
+        if (V[x] == V[y]) PC += 2;
     }
 
     void loadVx(const uint8_t x, const uint8_t kk) {
