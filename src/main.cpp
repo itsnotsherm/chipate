@@ -34,14 +34,105 @@ struct Context {
     uint16_t stack[16]{};
 };
 
-struct CHIP8 {
+class CHIP8 {
+private:
     uint8_t memory[4096]{};
     bool display[64*32]{};
     bool keys[16]{};
     Context ctx{};
 
+public:
     CHIP8() {
         std::copy(std::begin(font_set), std::end(font_set), memory+0x50);
+    }
+
+    bool loadROM(const char* path) {
+        std::ifstream rom{path, std::ios::binary};
+        if (!rom) return false;
+        rom.read(reinterpret_cast<char*>(memory + 0x200), 4096 - 0x200);
+        return true;
+    }
+
+    void step() {
+        const uint16_t opcode = (memory[ctx.PC] << 8) | memory[ctx.PC + 1];
+        ctx.PC += 2;
+
+        switch (opcode & 0xF000) {
+            case 0x0000: {
+                switch (opcode & 0x00FF) {
+                    case 0x00E0:
+                        clearDisplay();
+                        break;
+                }
+                break;
+            }
+            case 0x1000: {
+                jump(opcode & 0x0FFF);
+                break;
+            }
+            case 0x6000: {
+                const size_t reg = (opcode & 0x0F00) >> 8;
+                const uint8_t kk = opcode & 0x00FF;
+                loadVx(reg, kk);
+                break;
+            }
+            case 0x7000: {
+                const size_t reg = (opcode & 0x0F00) >> 8;
+                const uint8_t kk = opcode & 0x00FF;
+                addVx(reg, kk);
+                break;
+            }
+            case 0xA000: {
+                loadI(opcode & 0x0FFF);
+                break;
+            }
+            case 0xD000: {
+                const size_t x = (opcode & 0x0F00) >> 8;
+                const size_t y = (opcode & 0x00F0) >> 4;
+                const uint8_t n = opcode & 0x000F;
+                draw(x, y, n);
+                break;
+            }
+        }
+    }
+
+private:
+    void clearDisplay() {
+        std::fill(std::begin(display), std::end(display), false);
+    }
+
+    void jump(const uint16_t address) {
+        ctx.PC = address;
+    }
+
+    void loadVx(const size_t reg, const uint8_t kk) {
+        ctx.V[reg] = kk;
+    }
+
+    void addVx(const size_t reg, const uint8_t kk) {
+        ctx.V[reg] += kk;
+    }
+
+    void loadI(const uint16_t address) {
+        ctx.I = address;
+    }
+
+    void draw(const size_t x, const size_t y, const uint8_t n) {
+        ctx.V[0xF] = 0;
+        for (size_t i = 0; i < n; i++) {
+            const uint8_t byte = memory[ctx.I + i];
+            const auto py = ctx.V[y];
+            for (size_t j = 0; j < 8; j++) {
+                if (byte & (0x80 >> j)) {
+                    const auto px = (ctx.V[x] + j) % 64;
+                    const auto pixel = ((py + i) % 32) * 64 + px;
+                    if (display[pixel]) {
+                        ctx.V[0xF] = 1;
+                    }
+                    display[pixel] ^= 1;
+                }
+            }
+        }
     }
 };
 
@@ -53,12 +144,10 @@ int main(int argc, char** argv) {
 
     CHIP8 chip8{};
 
-    std::ifstream rom{argv[1], std::ios::binary};
-    if (!rom) {
+    if (!chip8.loadROM(argv[1])) {
         std::cerr << "Failed to open ROM: " << argv[1] << "\n";
         return 1;
     }
-    rom.read(reinterpret_cast<char*>(chip8.memory + 0x200), 4096-0x200);
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         std::cerr << "SDL_Init failed: " << SDL_GetError() << "\n";
