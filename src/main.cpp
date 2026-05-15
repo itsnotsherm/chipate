@@ -99,6 +99,11 @@ public:
         keys[key] = false;
     }
 
+    void decrementTimers() {
+        if (DT > 0) DT--;
+        if (ST > 0) ST--;
+    }
+
     void step() {
         const uint16_t opcode = (memory[PC] << 8) | memory[PC + 1];
         PC += 2;
@@ -467,7 +472,12 @@ int main(int argc, char** argv) {
     bool running = true;
     SDL_Event event;
     while (running) {
-        chip8.step();
+        for (int i = 0; i < 8; ++i) {
+            chip8.step();
+        }
+
+        chip8.decrementTimers();
+
         auto display = chip8.getDisplay();
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
