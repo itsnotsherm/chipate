@@ -169,6 +169,19 @@ public:
                 }
                 break;
             }
+            case 0xF000: {
+                switch (opcode & 0x00FF) {
+                    case 0x07:
+                        loadDelayTimerVx(x);
+                        break;
+                    case 0x15:
+                        setDelayTimer(x);
+                        break;
+                    case 0x18:
+                        setSoundTimer(x);
+                        break;
+                }
+            }
         }
     }
 
@@ -300,6 +313,18 @@ private:
 
     void skipNextKeyNotPressed(const uint8_t x) {
         if (!keys[V[x]]) PC += 2;
+    }
+
+    void loadDelayTimerVx(const uint8_t x) {
+        V[x] = DT;
+    }
+    
+    void setDelayTimer(const uint8_t x) {
+        DT = V[x];
+    }
+
+    void setSoundTimer(const uint8_t x) {
+        ST = V[x];
     }
 };
 
