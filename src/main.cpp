@@ -180,6 +180,21 @@ public:
                     case 0x18:
                         setSoundTimer(x);
                         break;
+                    case 0x1E:
+                        addRegI(x);
+                        break;
+                    case 0x29:
+                        setSpriteLocationI(x);
+                        break;
+                    case 0x33:
+                        setBCDVx(x);
+                        break;
+                    case 0x55:
+                        loadRegsToMemory(x);
+                        break;
+                    case 0x65:
+                        readRegsFromMemory(x);
+                        break;
                 }
             }
         }
@@ -318,13 +333,43 @@ private:
     void loadDelayTimerVx(const uint8_t x) {
         V[x] = DT;
     }
-    
+
     void setDelayTimer(const uint8_t x) {
         DT = V[x];
     }
 
     void setSoundTimer(const uint8_t x) {
         ST = V[x];
+    }
+
+    void addRegI(const uint8_t x) {
+        I += V[x];
+    }
+
+    void setSpriteLocationI(const uint8_t x) {
+        I = 0x50 + 5 * V[x];
+    }
+
+    void setBCDVx(const uint8_t x) {
+        uint8_t num = V[x];
+
+        for (int i = 2; i >= 0; i--) {
+            const uint8_t digit = num % 10;
+            memory[I + i] = digit;
+            num /= 10;
+        }
+    }
+
+    void loadRegsToMemory(const uint8_t x) {
+        for (uint8_t i = 0; i <= x; i++) {
+            memory[I + i] = V[i];
+        }
+    }
+
+    void readRegsFromMemory(const uint8_t x) {
+        for (uint8_t i = 0; i <= x; i++) {
+            V[i] = memory[I + i];
+        }
     }
 };
 
