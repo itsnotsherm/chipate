@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <random>
+#include <unordered_map>
 
 static uint8_t font_set[]{
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -25,6 +26,25 @@ static uint8_t font_set[]{
     0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 };
 
+static std::unordered_map<SDL_Scancode, uint8_t> scancode_map {
+    {SDL_SCANCODE_1, 0x1},
+    {SDL_SCANCODE_2, 0x2},
+    {SDL_SCANCODE_3, 0x3},
+    {SDL_SCANCODE_4, 0xC},
+    {SDL_SCANCODE_Q, 0x4},
+    {SDL_SCANCODE_W, 0x5},
+    {SDL_SCANCODE_E, 0x6},
+    {SDL_SCANCODE_R, 0xD},
+    {SDL_SCANCODE_A, 0x7},
+    {SDL_SCANCODE_S, 0x8},
+    {SDL_SCANCODE_D, 0x9},
+    {SDL_SCANCODE_F, 0xE},
+    {SDL_SCANCODE_Z, 0xA},
+    {SDL_SCANCODE_X, 0x0},
+    {SDL_SCANCODE_C, 0xB},
+    {SDL_SCANCODE_V, 0xF}
+};
+
 class CHIP8 {
 private:
     // Context (Registers + Stack)
@@ -41,6 +61,10 @@ private:
     bool display[64*32]{};
     bool keys[16]{};
 
+    // Additional state
+    bool waiting_for_key = false;
+    uint8_t wait_key_reg = 0x10;
+
 public:
     CHIP8() {
         std::copy(std::begin(font_set), std::end(font_set), memory+0x50);
@@ -55,6 +79,24 @@ public:
 
     [[nodiscard]] const bool* getDisplay() const {
         return display;
+    }
+
+    void notifyKeyDown(const SDL_Scancode code) {
+        auto it = scancode_map.find(code);
+        if (it == scancode_map.end()) return;
+
+        uint8_t key = it->second;
+        wait_key_reg = key;
+        keys[key] = true;
+    }
+
+    void notifyKeyUp(const SDL_Scancode code) {
+        auto it = scancode_map.find(code);
+        if (it == scancode_map.end()) return;
+
+        uint8_t key = it->second;
+        if (wait_key_reg == key) wait_key_reg = 0x10;
+        keys[key] = false;
     }
 
     void step() {
@@ -173,6 +215,9 @@ public:
                 switch (opcode & 0x00FF) {
                     case 0x07:
                         loadDelayTimerVx(x);
+                        break;
+                    case 0x0A:
+                        loadKeyPressVx(x);
                         break;
                     case 0x15:
                         setDelayTimer(x);
@@ -334,6 +379,20 @@ private:
         V[x] = DT;
     }
 
+    void loadKeyPressVx(const uint8_t x) {
+        if (!waiting_for_key) {
+            waiting_for_key = true;
+            wait_key_reg = 0x10;
+            PC -= 2;
+        } else if (wait_key_reg == 0x10) {
+            PC -= 2;
+        } else {
+            waiting_for_key = false;
+            V[x] = wait_key_reg;
+            wait_key_reg = 0x10;
+        }
+    }
+
     void setDelayTimer(const uint8_t x) {
         DT = V[x];
     }
@@ -429,6 +488,13 @@ int main(int argc, char** argv) {
             if (event.type == SDL_EVENT_QUIT) running = false;
             if (event.type == SDL_EVENT_KEY_DOWN &&
                 event.key.key == SDLK_ESCAPE) running = false;
+
+            if (running && event.type == SDL_EVENT_KEY_DOWN) {
+                chip8.notifyKeyDown(event.key.scancode);
+            }
+            if (running && event.type == SDL_EVENT_KEY_UP) {
+                chip8.notifyKeyUp(event.key.scancode);
+            }
         }
         SDL_Delay(16);
     }
